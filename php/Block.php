@@ -65,6 +65,8 @@ class Block {
 	public function render_callback( $attributes, $content, $block ) {
 		$post_types = get_post_types(  [ 'public' => true ], 'objects' );
 		$class_name = isset( $attributes['className'] ) ? $attributes['className'] : '';
+		$current_post_id = ! empty ( $block->context['postId'] ) && absint( $block->context['postId'] ) ? $block->context['postId'] : get_post()->ID;
+
 		ob_start();
 
 		?>
@@ -80,7 +82,7 @@ class Block {
 				<li><?php echo 'There are ' . $post_count . ' ' .
 					  $post_type_object->labels->name . '.'; ?></li>
 			<?php endforeach;	?>
-			</ul><p><?php echo 'The current post ID is ' . $_GET['post_id'] . '.'; ?></p>
+			</ul><p><?php echo 'The current post ID is ' . esc_html( $current_post_id ) . '.'; ?></p>
 
 			<?php
 			$query = new WP_Query(  array(
