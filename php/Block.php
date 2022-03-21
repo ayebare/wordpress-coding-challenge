@@ -63,58 +63,72 @@ class Block {
 	 * @return string The markup of the block.
 	 */
 	public function render_callback( $attributes, $content, $block ) {
-		$post_types = get_post_types(  [ 'public' => true ], 'objects' );
-		$class_name = isset( $attributes['className'] ) ? $attributes['className'] : '';
+		$post_types      = get_post_types( [ 'public' => true ], 'objects' );
+		$class_name      = isset( $attributes['className'] ) ? $attributes['className'] : '';
 		$current_post_id = ! empty ( $block->context['postId'] ) && absint( $block->context['postId'] ) ? $block->context['postId'] : get_post()->ID;
 
 		ob_start();
 
 		?>
-        <div class="<?php echo esc_attr( $class_name ); ?>">
+		<div class="<?php echo esc_attr( $class_name ); ?>">
 			<h2>Post Counts</h2>
 			<ul>
-			<?php
-			foreach ( $post_types as $post_type_slug => $post_type_object ) :
-				$post_count_object = wp_count_posts( $post_type_slug );
-				$post_count = isset( $post_count_object->publish ) ? $post_count_object->publish : 'Null';
+				<?php
+				foreach ( $post_types as $post_type_slug => $post_type_object ) :
+					$post_count_object = wp_count_posts( $post_type_slug );
+					$post_count = isset( $post_count_object->publish ) ? $post_count_object->publish : 'Null';
 
-				?>
-				<li><?php echo 'There are ' . $post_count . ' ' .
-					  $post_type_object->labels->name . '.'; ?></li>
-			<?php endforeach;	?>
-			</ul><p><?php echo 'The current post ID is ' . esc_html( $current_post_id ) . '.'; ?></p>
+					?>
+					<li><?php echo 'There are ' . $post_count . ' ' .
+					               $post_type_object->labels->name . '.'; ?></li>
+				<?php endforeach; ?>
+			</ul>
+
+			<p><?php echo 'The current post ID is ' . esc_html( $current_post_id ) . '.'; ?></p>
 
 			<?php
-			$query = new WP_Query(  array(
-				'post_type' => ['post', 'page'],
-				'post_status' => 'any',
-				'no_found_rows' => true,
-				'date_query' => array(
+			$query = new WP_Query( array(
+				'post_type'      => [ 'post', 'page' ],
+				'post_status'    => 'any',
+				'no_found_rows'  => true,
+				'posts_per_page' => 6,
+				// We'll exclude the current post ID using PHP processing effectively making the count 5,
+				'date_query'     => array(
 					array(
-						'hour'      => 9,
-						'compare'   => '>=',
+						'hour'    => 9,
+						'compare' => '>=',
 					),
 					array(
-						'hour' => 17,
-						'compare'=> '<=',
+						'hour'    => 17,
+						'compare' => '<=',
 					),
 				),
-                'tag'  => 'foo',
-                'category_name'  => 'baz',
-				  'post__not_in' => [ get_the_ID() ],
-			));
+				'tag'            => 'foo',
+				'category_name'  => 'baz',
+			) );
 
 			if ( $query->have_posts() ) :
-				?>
-				 <h2>5 posts with the tag of foo and the category of baz</h2>
-                <ul>
-                <?php
+			?>
+			<h2>5 posts with the tag of foo and the category of baz</h2>
+			<ul>
+				<?php
+				$posts = 0; // count the posts displayed, up to 5
 
-                 foreach ( array_slice( $query->posts, 0, 5 ) as $post ) :
-                    ?><li><?php echo $post->post_title ?></li><?php
-				endforeach;
-			endif;
-		 	?>
+				while ( $query->have_posts() && $posts < 5 ) :
+					$query->the_post();
+					if ( get_the_ID() === $current_post_id ) {
+						continue;
+					}
+					?>
+					<li><?php the_title(); ?></li><?php
+
+					$posts ++;
+				endwhile;
+
+				wp_reset_postdata();
+
+				endif;
+				?>
 			</ul>
 		</div>
 		<?php
