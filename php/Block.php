@@ -87,12 +87,62 @@ class Block {
 			<p><?php echo 'The current post ID is ' . esc_html( $current_post_id ) . '.'; ?></p>
 
 			<?php
-			$query = new WP_Query( array(
+			$posts = $this->get_tag_foo_cat_baz_posts( 6 ); // Fetch 6 post titles in case one of them belongs to the current post id and it gets filtered out.
+
+			// If the current post ID is part of the cached posts, remove it.
+			if ( isset ( $posts[ $current_post_id ] ) ) {
+				unset( $posts[ $current_post_id ] );
+			}
+
+			if ( ! empty( $posts ) ) :
+				?>
+				<h2>5 posts with the tag of foo and the category of baz</h2>
+				<ul>
+					<?php
+					$post_count = 0; // count the posts displayed, up to 5
+
+					foreach ( $posts as $post_title ) :
+						if ( $post_count === 5 ) {
+							break;
+						}
+
+						?>
+						<li><?php echo esc_html( $post_title ); ?></li>
+						<?php
+
+						$post_count ++;
+					endforeach;
+
+					?>
+				</ul>
+			<?php endif;
+			?>
+		</div>
+		<?php
+
+		return ob_get_clean();
+	}
+
+	/**
+	 * Retrieve 5 post titles for posts with foo tag and baz category
+	 *
+	 * @param bool $force_refresh Whether to force the cache to be refreshed. Default false.
+	 *
+	 * @return array Array of post titles matched to ids of posts with foo tag and baz category
+	 */
+	public function get_tag_foo_cat_baz_posts( $post_count, $force_refresh = false ) {
+		// Check for xwp_tag_foo_cat_baz_posts key in the 'block_posts' group.
+		$posts = wp_cache_get( 'xwp_tag_foo_cat_baz_posts', 'block_posts' );
+
+		// If nothing is found, build the object.
+		if ( true === $force_refresh || false === $posts ) {
+			$posts = [];
+
+			$posts_query = new WP_Query( array(
 				'post_type'      => [ 'post', 'page' ],
 				'post_status'    => 'any',
 				'no_found_rows'  => true,
-				'posts_per_page' => 6,
-				// We'll exclude the current post ID using PHP processing effectively making the count 5,
+				'posts_per_page' => $post_count,
 				'date_query'     => array(
 					array(
 						'hour'    => 9,
@@ -107,32 +157,18 @@ class Block {
 				'category_name'  => 'baz',
 			) );
 
-			if ( $query->have_posts() ) :
-			?>
-			<h2>5 posts with the tag of foo and the category of baz</h2>
-			<ul>
-				<?php
-				$posts = 0; // count the posts displayed, up to 5
-
-				while ( $query->have_posts() && $posts < 5 ) :
-					$query->the_post();
-					if ( get_the_ID() === $current_post_id ) {
-						continue;
-					}
-					?>
-					<li><?php the_title(); ?></li><?php
-
-					$posts ++;
+			if ( ! is_wp_error( $posts_query ) && $posts_query->have_posts() ) {
+				while ( $posts_query->have_posts() ) :
+					$posts_query->the_post();
+					$posts[ get_the_ID() ] = get_the_title();
 				endwhile;
-
 				wp_reset_postdata();
 
-				endif;
-				?>
-			</ul>
-		</div>
-		<?php
+				// Keep array of ID->post_title in cache
+				wp_cache_set( 'xwp_tag_foo_cat_baz_posts', $posts, 'block_posts' );
+			}
+		}
 
-		return ob_get_clean();
+		return $posts;
 	}
 }
