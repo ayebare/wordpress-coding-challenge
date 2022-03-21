@@ -88,6 +88,7 @@ class Block {
 			$query = new WP_Query(  array(
 				'post_type' => ['post', 'page'],
 				'post_status' => 'any',
+				'no_found_rows' => true,
 				'date_query' => array(
 					array(
 						'hour'      => 9,
