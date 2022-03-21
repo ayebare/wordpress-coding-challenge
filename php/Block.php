@@ -40,6 +40,10 @@ class Block {
 	 */
 	public function init() {
 		add_action( 'init', [ $this, 'register_block' ] );
+
+		foreach ( [ 'post', 'page' ] as $post_type ) {
+			add_action( "save_post_{$post_type}", [ $this, 'refresh_tag_foo_cat_baz_posts' ], 10, 2 );
+		}
 	}
 
 	/**
@@ -124,7 +128,7 @@ class Block {
 	}
 
 	/**
-	 * Retrieve 5 post titles for posts with foo tag and baz category
+	 * Retrieve 5 post titles with foo tag and baz category
 	 *
 	 * @param bool $force_refresh Whether to force the cache to be refreshed. Default false.
 	 *
@@ -170,5 +174,34 @@ class Block {
 		}
 
 		return $posts;
+	}
+
+	/**
+	 * Prime the cache for 5 post titles with foo tag and baz category
+	 *
+	 * If the post is not of type post or page don't update the cache.
+	 * If the post wasn't published between the 9th and 17th hour, don't update the cache.
+	 *
+	 * @param int $post_ID Post ID.
+	 * @param WP_Post $post The post Object
+	 */
+	public function refresh_tag_foo_cat_baz_posts( $post_ID, $post ) {
+		if ( 'auto-draft' === $post->post_status ) {
+			return;
+		}
+
+		if ( wp_is_post_revision( $post ) ) {
+			return;
+		}
+
+		$post_publish_time = get_post_time( 'U', false, $post );
+		$post_publish_hour = date( 'H', $post_publish_time );
+
+		if ( $post_publish_hour < 9 || $post_publish_hour > 17 ) {
+			return;
+		}
+
+		// Force the cache refresh for 5 post titles with foo tag and baz category.
+		$this->get_tag_foo_cat_baz_posts( 6 );
 	}
 }
