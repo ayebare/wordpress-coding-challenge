@@ -202,9 +202,22 @@ class Block {
 						'compare' => '<=',
 					),
 				),
-				'tag'            => 'foo',
-				'category_name'  => 'baz',
+				'tax_query'      => array(
+					'relation' => 'AND',
+					array(
+						'taxonomy'         => 'category',
+						'field'            => 'slug',
+						'include_children' => false,
+						'terms'            => 'baz',
+					),
+					array(
+						'taxonomy' => 'post_tag',
+						'field'    => 'slug',
+						'terms'    => 'foo',
+					),
+				),
 			) );
+
 
 			if ( ! is_wp_error( $posts_query ) && $posts_query->have_posts() ) {
 				while ( $posts_query->have_posts() ) :
