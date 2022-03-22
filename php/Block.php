@@ -119,10 +119,12 @@ class Block {
 			<?php
 			/**
 			 * We need 5 post titles
-			 * We fetch 6 in case one of them belongs to the current post id and it gets filtered out.
+			 * get_tag_foo_cat_baz_posts fetches 6 by default which comes in handy in case one of
+			 * them belongs to the current post id and it gets filtered out.
+			 *
 			 * We shall slice the array to 5 after the filtering process to make sure any extra titles are removed.
 			 */
-			$posts = $this->get_tag_foo_cat_baz_posts( 6 );
+			$posts = $this->get_tag_foo_cat_baz_posts();
 
 			// If the current post ID is part of the cached posts, remove it.
 			if ( isset ( $posts[ $current_post_id ] ) ) {
@@ -172,10 +174,11 @@ class Block {
 	 *
 	 * @param bool $force_refresh Whether to force the cache to be refreshed. Default false.
 	 *
-	 * @param int $post_count The number of posts to retrieve. Default 10.
+	 * @param int $post_count The number of posts to retrieve. Default 6.
+	 *
 	 * @return array Array of post titles matched to ids of posts containing foo tag and baz category
 	 */
-	public function get_tag_foo_cat_baz_posts( $post_count = 10, $force_refresh = false ) {
+	public function get_tag_foo_cat_baz_posts( $force_refresh = false, $post_count = 6 ) {
 		// Check for xwp_tag_foo_cat_baz_posts key in the 'block_posts' group.
 		$posts = wp_cache_get( 'xwp_tag_foo_cat_baz_posts', 'block_posts' );
 
@@ -242,7 +245,7 @@ class Block {
 			return;
 		}
 
-		// Force the cache refresh for 5 post titles with foo tag and baz category.
-		$this->get_tag_foo_cat_baz_posts( 6 );
+		// Force the cache refresh for post titles with foo tag and baz category.
+		$this->get_tag_foo_cat_baz_posts( true );
 	}
 }
