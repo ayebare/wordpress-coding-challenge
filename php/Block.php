@@ -75,46 +75,86 @@ class Block {
 
 		?>
 		<div class="<?php echo esc_attr( $class_name ); ?>">
-			<h2>Post Counts</h2>
+			<h2><? esc_html_e( 'Post Counts', 'site-counts' ); ?></h2>
 			<ul>
 				<?php
 				foreach ( $post_types as $post_type_slug => $post_type_object ) :
 					$post_count_object = wp_count_posts( $post_type_slug );
-					$post_count = isset( $post_count_object->publish ) ? $post_count_object->publish : 'Null';
+					$post_count = isset( $post_count_object->publish ) ? $post_count_object->publish : esc_html__( 'Null', 'site-counts' );
 
-					?>
-					<li><?php echo 'There are ' . $post_count . ' ' .
-					               $post_type_object->labels->name . '.'; ?></li>
+					printf(
+						'<li>%s</li>',
+						esc_html( sprintf(
+						/**
+						 *translators: %d: The number of posts of each public post type.
+						 *translators: %2$s: the singular form of the post type label e.g Media, Post, Page
+						 *translators: %2$s: the plural form of the post type label e.g Media, Posts, Pages
+						 **/
+							_n(
+								'There is %d %2$s',
+								'There are %d %3$s',
+								$post_count,
+								'site-counts'
+							),
+							$post_count,
+							$post_type_object->labels->singular_name,
+							$post_type_object->labels->name
+						) )
+					); ?>
+
+
 				<?php endforeach; ?>
 			</ul>
 
-			<p><?php echo 'The current post ID is ' . esc_html( $current_post_id ) . '.'; ?></p>
+			<?php
+			printf(
+				'<p>%s</p>',
+				esc_html( sprintf(
+				/* translators: %d: A post ID. */
+					__( 'The current post ID is %d.', 'site-counts' ),
+					$current_post_id
+				) )
+			); ?>
 
 			<?php
-			$posts = $this->get_tag_foo_cat_baz_posts( 6 ); // Fetch 6 post titles in case one of them belongs to the current post id and it gets filtered out.
+			/**
+			 * We need 5 post titles
+			 * We fetch 6 in case one of them belongs to the current post id and it gets filtered out.
+			 * We shall slice the array to 5 after the filtering process to make sure any extra titles are removed.
+			 */
+			$posts = $this->get_tag_foo_cat_baz_posts( 6 );
 
 			// If the current post ID is part of the cached posts, remove it.
 			if ( isset ( $posts[ $current_post_id ] ) ) {
 				unset( $posts[ $current_post_id ] );
 			}
 
+			$posts = array_slice( $posts, 0, 5, true ); // Make sure the array contains atmost 5 posts.
+
 			if ( ! empty( $posts ) ) :
-				?>
-				<h2>5 posts with the tag of foo and the category of baz</h2>
+				$post_count = count( $posts );
+
+				printf(
+					'<h2>%s</h2>',
+					esc_html( sprintf(
+					/* translators: %d: The number of posts with tag foo and category baz. */
+						_n(
+							'%d post with the tag of foo and the category of baz.',
+							'%d posts with the tag of foo and the category of baz.',
+							$post_count,
+							'site-counts'
+						),
+						$post_count
+					) )
+				); ?>
+
 				<ul>
 					<?php
-					$post_count = 0; // count the posts displayed, up to 5
 
 					foreach ( $posts as $post_title ) :
-						if ( $post_count === 5 ) {
-							break;
-						}
-
 						?>
 						<li><?php echo esc_html( $post_title ); ?></li>
 						<?php
-
-						$post_count ++;
 					endforeach;
 
 					?>
@@ -128,13 +168,14 @@ class Block {
 	}
 
 	/**
-	 * Retrieve 5 post titles with foo tag and baz category
+	 * Retrieve post titles of posts with foo tag and baz category
 	 *
 	 * @param bool $force_refresh Whether to force the cache to be refreshed. Default false.
 	 *
-	 * @return array Array of post titles matched to ids of posts with foo tag and baz category
+	 * @param int $post_count The number of posts to retrieve. Default 10.
+	 * @return array Array of post titles matched to ids of posts containing foo tag and baz category
 	 */
-	public function get_tag_foo_cat_baz_posts( $post_count, $force_refresh = false ) {
+	public function get_tag_foo_cat_baz_posts( $post_count = 10, $force_refresh = false ) {
 		// Check for xwp_tag_foo_cat_baz_posts key in the 'block_posts' group.
 		$posts = wp_cache_get( 'xwp_tag_foo_cat_baz_posts', 'block_posts' );
 
