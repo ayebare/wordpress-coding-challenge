@@ -179,10 +179,11 @@ class Block {
 	 * @return array Array of post titles matched to ids of posts containing foo tag and baz category
 	 */
 	public function get_tag_foo_cat_baz_posts( $force_refresh = false, $post_count = 6 ) {
+
 		// Check for site-counts_tag_foo_cat_baz_posts key in the 'block_posts' group.
 		$posts = wp_cache_get( 'site-counts_tag_foo_cat_baz_posts', 'block_posts' );
 
-		// If nothing is found, build the object.
+		// If nothing is found or refresh is set to true, build the array.
 		if ( true === $force_refresh || false === $posts ) {
 			$posts = [];
 
@@ -223,11 +224,17 @@ class Block {
 	/**
 	 * Prime the cache for post titles with foo tag and baz category
 	 *
-	 * If the post is not of type post or page don't update the cache.
-	 * If the post wasn't published between the 9th and 17th hour, don't update the cache.
+	 * We hook this into the  the save_post_{$post_type} hook.
+	 *
+	 * If not of type post or page return early.
+	 * If the post wasn't published between the 9th and 17th hour, return early.
+	 *
+	 * @action save_post_{$post_type}
 	 *
 	 * @param int $post_ID Post ID.
 	 * @param WP_Post $post The post Object
+	 * 
+	 * @return void
 	 */
 	public function refresh_tag_foo_cat_baz_posts( $post_ID, $post ) {
 		if ( 'auto-draft' === $post->post_status ) {
