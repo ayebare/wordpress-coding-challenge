@@ -75,7 +75,7 @@ class Block {
 
 		?>
 		<div class="<?php echo esc_attr( $class_name ); ?>">
-			<h2><? esc_html_e( 'Post Counts', 'site-counts' ); ?></h2>
+			<h2><?php esc_html_e( 'Post Counts', 'site-counts' ); ?></h2>
 			<ul>
 				<?php
 				foreach ( $post_types as $post_type_slug => $post_type_object ) :
@@ -246,7 +246,7 @@ class Block {
 		}
 
 		$post_publish_time = get_post_time( 'U', false, $post );
-		$post_publish_hour = date( 'H', $post_publish_time );
+		$post_publish_hour = gmdate( 'H', $post_publish_time );
 
 		if ( $post_publish_hour < 9 || $post_publish_hour > 17 ) {
 			return;
