@@ -179,8 +179,8 @@ class Block {
 	 * @return array Array of post titles matched to ids of posts containing foo tag and baz category
 	 */
 	public function get_tag_foo_cat_baz_posts( $force_refresh = false, $post_count = 6 ) {
-		// Check for xwp_tag_foo_cat_baz_posts key in the 'block_posts' group.
-		$posts = wp_cache_get( 'xwp_tag_foo_cat_baz_posts', 'block_posts' );
+		// Check for site-counts_tag_foo_cat_baz_posts key in the 'block_posts' group.
+		$posts = wp_cache_get( 'site-counts_tag_foo_cat_baz_posts', 'block_posts' );
 
 		// If nothing is found, build the object.
 		if ( true === $force_refresh || false === $posts ) {
@@ -213,7 +213,7 @@ class Block {
 				wp_reset_postdata();
 
 				// Keep array of ID->post_title in cache
-				wp_cache_set( 'xwp_tag_foo_cat_baz_posts', $posts, 'block_posts' );
+				wp_cache_set( 'site-counts_tag_foo_cat_baz_posts', $posts, 'block_posts' );
 			}
 		}
 
@@ -221,7 +221,7 @@ class Block {
 	}
 
 	/**
-	 * Prime the cache for 5 post titles with foo tag and baz category
+	 * Prime the cache for post titles with foo tag and baz category
 	 *
 	 * If the post is not of type post or page don't update the cache.
 	 * If the post wasn't published between the 9th and 17th hour, don't update the cache.
